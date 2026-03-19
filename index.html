@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VIRO SCI · science toolkit · thermometer, pH & converter</title>
+    <!-- Google Fonts for clean typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- Font Awesome 6 (free) for crisp icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #0b0a0f;
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem 1.5rem;
+            position: relative;
+            color: #f2eaff;
+        }
+
+        /* ---------- halftone / noise overlay ---------- */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            background-image: 
+                radial-gradient(circle at 30% 40%, rgba(160, 120, 255, 0.08) 1px, transparent 1px),
+                radial-gradient(circle at 70% 85%, rgba(200, 140, 255, 0.08) 1px, transparent 1px),
+                radial-gradient(circle at 15% 90%, rgba(140, 100, 255, 0.06) 2px, transparent 2px),
+                radial-gradient(circle at 85% 20%, rgba(180, 130, 255, 0.06) 2px, transparent 2px),
+                repeating-radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.01) 0px, transparent 1px, transparent 4px);
+            background-size: 60px 60px, 90px 90px, 120px 120px, 150px 150px, auto;
+            z-index: 0;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            background: radial-gradient(circle at 50% 50%, rgba(180, 130, 255, 0.15) 0px, transparent 3px);
+            background-size: 48px 48px;
+            opacity: 0.5;
+            z-index: 0;
+        }
+
+        .main-container {
+            position: relative;
+            z-index: 10;
+            max-width: 1400px;
+            width: 100%;
+        }
+
+        /* header */
+        .hero {
+            margin-bottom: 3rem;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: clamp(3rem, 12vw, 5.5rem);
+            font-weight: 700;
+            background: linear-gradient(145deg, #d4c0ff 0%, #b47aff 40%, #9f5eff 80%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            letter-spacing: -0.02em;
+            filter: drop-shadow(0 0 20px #ae7aff66);
+            position: relative;
+            display: inline-block;
+            padding: 0 0.5rem;
+        }
+
+        .hero h1 span {
+            font-size: 1.8rem;
+            background: linear-gradient(145deg, #b47aff, #8f4aff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-left: 0.5rem;
+        }
+
+        .halftone-underline {
+            height: 6px;
+            width: 280px;
+            max-width: 70%;
+            margin: 0.8rem auto 0;
+            background: linear-gradient(90deg, transparent, #c68eff, #a158ff, #c68eff, transparent);
+            border-radius: 6px;
+            position: relative;
+        }
+
+        .halftone-underline::after {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: 0;
+            width: 100%;
+            height: 24px;
+            background: radial-gradient(circle at 20% 0%, #b47aff40 2px, transparent 3px);
+            background-size: 24px 12px;
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .subhead {
+            font-size: 1.2rem;
+            font-weight: 400;
+            color: #bcb0da;
+            max-width: 650px;
+            margin: 1.5rem auto 0;
+            background: rgba(20, 10, 30, 0.5);
+            backdrop-filter: blur(8px);
+            padding: 0.75rem 2rem;
+            border-radius: 60px;
+            border: 1px solid #4a2c7333;
+            box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.7);
+        }
+
+        /* card grid */
+        .tool-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 2rem;
+            margin: 3.5rem 0 2rem;
+        }
+
+        .tool-card {
+            background: rgba(18, 14, 28, 0.7);
+            backdrop-filter: blur(8px);
+            border: 1px solid #3b2a55;
+            border-radius: 2.5rem 2.5rem 2rem 2rem;
+            padding: 2rem 1.8rem 1.8rem 1.8rem;
+            box-shadow: 0 25px 40px -15px #000000dd, 0 0 0 1px #6236b31a inset;
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tool-card:hover {
+            border-color: #aa7eff;
+            box-shadow: 0 30px 50px -20px #b47aff, 0 0 0 1.5px #b47aff66 inset;
+            transform: translateY(-6px);
+            background: rgba(22, 16, 34, 0.8);
+        }
+
+        .tool-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: radial-gradient(circle at 30% 70%, #c7a6ff10 1px, transparent 1px),
+                              radial-gradient(circle at 70% 20%, #b27aff15 1.5px, transparent 1.5px);
+            background-size: 36px 36px, 48px 48px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            margin-bottom: 1.8rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        .card-header i {
+            font-size: 2.5rem;
+            color: #e1ceff;
+            filter: drop-shadow(0 0 6px #b372ff);
+            background: linear-gradient(145deg, #b37aff, #8f4aff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .card-header h2 {
+            font-size: 2rem;
+            font-weight: 600;
+            background: linear-gradient(145deg, #f0eaff, #dbbdff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            letter-spacing: -0.5px;
+        }
+
+        .tool-body {
+            position: relative;
+            z-index: 2;
+            flex: 1;
+        }
+
+        /* ----- THERMOMETER STYLES ----- */
+        .thermometer-container {
+            background: #1a1430;
+            border-radius: 60px;
+            padding: 1.8rem 1.5rem;
+            border: 1px solid #624b8b;
+            box-shadow: 0 10px 0 #2c1f41, inset 0 1px 4px #bba6ff55;
+            margin-bottom: 1rem;
+        }
+
+        .thermometer-display {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .thermometer-icon {
+            font-size: 4rem;
+            color: #b47aff;
+            filter: drop-shadow(0 0 10px #9f5eff);
+        }
+
+        .temp-value {
+            font-size: 3.5rem;
+            font-weight: 700;
+            background: linear-gradient(145deg, #fff, #e6d0ff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            letter-spacing: 2px;
+        }
+
+        .temp-unit {
+            font-size: 1.5rem;
+            color: #b097e6;
+        }
+
+        .thermometer-visual {
+            margin: 1.5rem 0;
+            height: 40px;
+            background: #0f0b1a;
+            border-radius: 40px;
+            border: 2px solid #5c3f8c;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .thermometer-fill {
+            height: 100%;
+            width: 50%;
+            background: linear-gradient(90deg, #4aa0ff, #ff4a4a);
+            border-radius: 40px;
+            transition: width 0.3s ease;
+            box-shadow: 0 0 20px #b47aff;
+        }
+
+        .thermometer-controls {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+
+        .temp-btn {
+            background: #2d2347;
+            border: none;
+            border-radius: 40px;
+            padding: 0.8rem 2rem;
+            font-size: 1.3rem;
+            color: #e6d0ff;
+            border: 1px solid #7b5eb0;
+            cursor: pointer;
+            transition: all 0.1s ease;
+            box-shadow: 0 4px 0 #1a122e;
+        }
+
+        .temp-btn:active {
+            transform: translateY(4px);
+            box-shadow: none;
+        }
+
+        .temp-btn:hover {
+            background: #382b57;
+        }
+
+        /* ----- pH SCALE STYLES ----- */
+        .ph-container {
+            background: #1f1937;
+            border-radius: 40px;
+            padding: 1.5rem;
+            border: 1px solid #7055a5;
+        }
+
+        .ph-scale {
+            margin: 1.5rem 0;
+        }
+
+        .ph-bar {
+            height: 60px;
+            background: linear-gradient(90deg, #ff4a6e, #ff9f4a, #4aff9e, #4aa0ff, #b47aff);
+            border-radius: 60px;
+            border: 2px solid #8a6ac8;
+            position: relative;
+        }
+
+        .ph-indicator {
+            width: 20px;
+            height: 80px;
+            background: white;
+            border: 3px solid #b47aff;
+            border-radius: 20px;
+            position: relative;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 0 20px #b47aff;
+            transition: left 0.3s ease;
+        }
+
+        .ph-labels {
+            display: flex;
+            justify-content: space-between;
+            margin: 0.8rem 0;
+            color: #b097e6;
+            font-weight: 500;
+        }
+
+        .ph-value {
+            text-align: center;
+            font-size: 2rem;
+            font-weight: 700;
+            background: #2d2347;
+            padding: 0.5rem;
+            border-radius: 40px;
+            border: 1px solid #9f5eff;
+        }
+
+        .ph-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+
+        .ph-btn {
+            background: #2d2347;
+            border: none;
+            border-radius: 40px;
+            padding: 0.5rem 1.5rem;
+            color: #e6d0ff;
+            border: 1px solid #7b5eb0;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #1a122e;
+        }
+
+        .ph-btn:active {
+            transform: translateY(4px);
+            box-shadow: none;
+        }
+
+        /* ----- UNIT CONVERTER STYLES ----- */
+        .converter-container {
+            background: #1a1430;
+            border-radius: 40px;
+            padding: 1.5rem;
+            border: 1px solid #624b8b;
+        }
+
+        .converter-type {
+            display: flex;
+            gap: 0.8rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .type-btn {
+            background: #2d2347;
+            border: none;
+            border-radius: 40px;
+            padding: 0.6rem 1.2rem;
+            color: #dac5ff;
+            border: 1px solid #624b8b;
+            cursor: pointer;
+            flex: 1;
+            transition: all 0.1s ease;
+        }
+
+        .type-btn.active {
+            background: #9f5eff;
+            color: #0f0b1a;
+            border-color: #dbbaff;
+            font-weight: 600;
+        }
+
+        .converter-inputs {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .input-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: #0f0b1a;
+            border-radius: 60px;
+            padding: 0.3rem 0.3rem 0.3rem 1.5rem;
+            border: 1px solid #5c3f8c;
+        }
+
+        .input-group label {
+            min-width: 60px;
+            color: #b097e6;
+            font-weight: 500;
+        }
+
+        .input-group input {
+            background: transparent;
+            border: none;
+            color: #f2eaff;
+            font-size: 1.1rem;
+            padding: 0.8rem;
+            width: 100%;
+            font-family: 'Space Grotesk', monospace;
+        }
+
+        .input-group input:focus {
+            outline: none;
+        }
+
+        .input-group span {
+            background: #2d2347;
+            padding: 0.5rem 1.2rem;
+            border-radius: 60px;
+            color: #dac5ff;
+            border: 1px solid #7b5eb0;
+        }
+
+        /* ----- LAB EQUIPMENT STYLES ----- */
+        .equipment-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .equip-item {
+            background: #1f1937;
+            border-radius: 30px;
+            padding: 1.2rem 0.5rem;
+            text-align: center;
+            border: 1px solid #624b8b;
+            transition: all 0.2s ease;
+        }
+
+        .equip-item:hover {
+            border-color: #b47aff;
+            transform: scale(1.05);
+            background: #2d2347;
+        }
+
+        .equip-item i {
+            font-size: 2.5rem;
+            color: #b47aff;
+            margin-bottom: 0.5rem;
+        }
+
+        .equip-item span {
+            display: block;
+            font-size: 0.9rem;
+            color: #dac5ff;
+        }
+
+        .measure-badge {
+            background: #0f0b1a;
+            border-radius: 40px;
+            padding: 0.8rem 1.2rem;
+            margin-top: 1rem;
+            border: 1px solid #5c3f8c;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* footer */
+        .footer-note {
+            margin-top: 4rem;
+            text-align: center;
+            color: #62558b;
+            font-weight: 400;
+            font-size: 0.95rem;
+            letter-spacing: 0.5px;
+            backdrop-filter: blur(2px);
+            padding: 1.5rem 0.5rem 0.2rem;
+            border-top: 1px dashed #6d4d9a55;
+            position: relative;
+        }
+
+        .footer-note i {
+            color: #b37eff;
+        }
+
+        @media (max-width: 600px) {
+            .tool-grid { gap: 1.5rem; }
+            .card-header h2 { font-size: 1.8rem; }
+            .converter-type { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <!-- hero -->
+        <div class="hero">
+            <h1>VIRO SCI <span>⚗️</span></h1>
+            <div class="halftone-underline"></div>
+            <div class="subhead">
+                <i class="fas fa-flask" style="margin-right: 8px;"></i> 
+                thermometer · pH scale · unit converter · lab tools
+            </div>
+        </div>
+
+        <!-- science tools grid -->
+        <div class="tool-grid">
+            <!-- CARD 1 – THERMOMETER -->
+            <div class="tool-card">
+                <div class="card-header">
+                    <i class="fas fa-temperature-high"></i>
+                    <h2>thermometer</h2>
+                </div>
+                <div class="tool-body">
+                    <div class="thermometer-container">
+                        <div class="thermometer-display">
+                            <i class="fas fa-thermometer-half thermometer-icon"></i>
+                            <div>
+                                <span class="temp-value" id="tempDisplay">20.0</span>
+                                <span class="temp-unit">°C</span>
+                            </div>
+                        </div>
+                        <div class="thermometer-visual">
+                            <div class="thermometer-fill" id="thermometerFill" style="width: 25%"></div>
+                        </div>
+                        <div class="thermometer-controls">
+                            <button class="temp-btn" id="tempDown"><i class="fas fa-minus"></i> cool</button>
+                            <button class="temp-btn" id="tempUp">heat <i class="fas fa-plus"></i></button>
+                        </div>
+                        <div style="text-align: center; margin-top: 1rem; color: #b097e6;">
+                            <span id="tempDesc">Room temperature</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CARD 2 – pH SCALE -->
+            <div class="tool-card">
+                <div class="card-header">
+                    <i class="fas fa-flask"></i>
+                    <h2>pH scale</h2>
+                </div>
+                <div class="tool-body">
+                    <div class="ph-container">
+                        <div class="ph-scale">
+                            <div class="ph-bar"></div>
+                            <div class="ph-indicator" id="phIndicator" style="left: 50%"></div>
+                            <div class="ph-labels">
+                                <span>0 acid</span>
+                                <span>7 neutral</span>
+                                <span>14 alkaline</span>
+                            </div>
+                        </div>
+                        <div class="ph-value" id="phValue">7.0</div>
+                        <div style="text-align: center; margin: 0.8rem 0; color: #dac5ff;" id="phDesc">Neutral - Pure water</div>
+                        <div class="ph-buttons">
+                            <button class="ph-btn" id="phDown"><i class="fas fa-minus"></i> acidic</button>
+                            <button class="ph-btn" id="phUp">alkaline <i class="fas fa-plus"></i></button>
+                        </div>
+                        <input type="range" id="phSlider" min="0" max="14" step="0.1" value="7" style="width: 100%; margin-top: 1rem; accent-color: #9f5eff;">
+                    </div>
+                </div>
+            </div>
+
+            <!-- CARD 3 – UNIT CONVERTER -->
+            <div class="tool-card">
+                <div class="card-header">
+                    <i class="fas fa-exchange-alt"></i>
+                    <h2>converter</h2>
+                </div>
+                <div class="tool-body">
+                    <div class="converter-container">
+                        <div class="converter-type">
+                            <button class="type-btn active" id="convTemp">🌡️ temperature</button>
+                            <button class="type-btn" id="convMass">⚖️ mass</button>
+                            <button class="type-btn" id="convVolume">🧪 volume</button>
+                            <button class="type-btn" id="convLength">📏 length</button>
+                        </div>
+                        
+                        <!-- temperature inputs (default) -->
+                        <div class="converter-inputs" id="tempInputs">
+                            <div class="input-group">
+                                <label>Celsius</label>
+                                <input type="number" id="celsius" value="20" step="0.1">
+                                <span>°C</span>
+                            </div>
+                            <div class="input-group">
+                                <label>Fahrenheit</label>
+                                <input type="number" id="fahrenheit" value="68" step="0.1">
+                                <span>°F</span>
+                            </div>
+                            <div class="input-group">
+                                <label>Kelvin</label>
+                                <input type="number" id="kelvin" value="293.15" step="0.1">
+                                <span>K</span>
+                            </div>
+                        </div>
+
+                        <!-- mass inputs (hidden initially) -->
+                        <div class="converter-inputs" id="massInputs" style="display: none;">
+                            <div class="input-group">
+                                <label>Grams</label>
+                                <input type="number" id="grams" value="100" step="0.1">
+                                <span>g</span>
+                            </div>
+                            <div class="input-group">
+                                <label>Kilograms</label>
+                                <input type="number" id="kilograms" value="0.1" step="0.001">
+                                <span>kg</span>
+                            </div>
+                            <div class="input-group">
+                                <label>Pounds</label>
+                                <input type="number" id="pounds" value="0.22" step="0.01">
+                                <span>lb</span>
+                            </div>
+                        </div>
+
+                        <!-- volume inputs (hidden) -->
+                        <div class="converter-inputs" id="volumeInputs" style="display: none;">
+                            <div class="input-group">
+                                <label>Milliliters</label>
+                                <input type="number" id="milliliters" value="100" step="0.1">
+                                <span>mL</span>
+                            </div>
+                            <div class="input-group">
+                                <label>Liters</label>
+                                <input type="number" id="liters" value="0.1" step="0.01">
+                                <span>L</span>
+                            </div>
+                            <div class="input-group">
+                                <label>Gallons</label>
+                                <input type="number" id="gallons" value="0.026" step="0.001">
+                                <span>gal</span>
+                            </div>
+                        </div>
+
+                        <!-- length inputs (hidden) -->
+                        <div class="converter-inputs" id="lengthInputs" style="display: none;">
+                            <div class="input-group">
+                                <label>Millimeters</label>
+                                <input type="number" id="millimeters" value="100" step="0.1">
+                                <span>mm</span>
+                            </div>
+                            <div class="input-group">
+                                <label>Centimeters</label>
+                                <input type="number" id="centimeters" value="10" step="0.1">
+                                <span>cm</span>
+                            </div>
+                            <div class="input-group">
+                                <label>Inches</label>
+                                <input type="number" id="inches" value="3.94" step="0.01">
+                                <span>in</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- second row: lab equipment and measurement tools -->
+        <div class="tool-grid" style="margin-top: 0;">
+            <!-- CARD 4 – LAB EQUIPMENT -->
+            <div class="tool-card">
+                <div class="card-header">
+                    <i class="fas fa-microscope"></i>
+                    <h2>lab gear</h2>
+                </div>
+                <div class="tool-body">
+                    <div class="equipment-grid">
+                        <div class="equip-item">
+                            <i class="fas fa-flask"></i>
+                            <span>beaker</span>
+                            <span style="font-size: 0.7rem;">250mL</span>
+                        </div>
+                        <div class="equip-item">
+                            <i class="fas fa-vial"></i>
+                            <span>test tube</span>
+                            <span style="font-size: 0.7rem;">20mL</span>
+                        </div>
+                        <div class="equip-item">
+                            <i class="fas fa-microscope"></i>
+                            <span>microscope</span>
+                            <span style="font-size: 0.7rem;">40x</span>
+                        </div>
+                        <div class="equip-item">
+                            <i class="fas fa-weight-scale"></i>
+                            <span>scale</span>
+                            <span style="font-size: 0.7rem;">0.1g</span>
+                        </div>
+                        <div class="equip-item">
+                            <i class="fas fa-timer"></i>
+                            <span>timer</span>
+                            <span style="font-size: 0.7rem;">60min</span>
+                        </div>
+                        <div class="equip-item">
+                            <i class="fas fa-magnet"></i>
+                            <span>stirrer</span>
+                            <span style="font-size: 0.7rem;">hot plate</span>
+                        </div>
+                    </div>
+                    <div class="measure-badge">
+                        <span><i class="fas fa-weight-hanging"></i> mass: 150g</span>
+                        <span><i class="fas fa-droplet"></i> vol: 50mL</span>
+                        <span><i class="fas fa-temperature-low"></i> 23°C</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CARD 5 – MEASUREMENT TOOLS & REFERENCE -->
+            <div class="tool-card">
+                <div class="card-header">
+                    <i class="fas fa-ruler-combined"></i>
+                    <h2>references</h2>
+                </div>
+                <div class="tool-body">
+                    <div style="background: #1f1937; border-radius: 40px; padding: 1.5rem; border: 1px solid #7055a5;">
+                        <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; margin-bottom: 1.5rem;">
+                            <div style="text-align: center; background: #0f0b1a; padding: 1rem; border-radius: 30px; min-width: 100px;">
+                                <i class="fas fa-water" style="font-size: 2rem; color: #4aa0ff;"></i>
+                                <div>H₂O freezing</div>
+                                <div><strong>0°C / 32°F</strong></div>
+                            </div>
+                            <div style="text-align: center; background: #0f0b1a; padding: 1rem; border-radius: 30px; min-width: 100px;">
+                                <i class="fas fa-wind" style="font-size: 2rem; color: #b47aff;"></i>
+                                <div>body temp</div>
+                                <div><strong>37°C / 98.6°F</strong></div>
+                            </div>
+                            <div style="text-align: center; background: #0f0b1a; padding: 1rem; border-radius: 30px; min-width: 100px;">
+                                <i class="fas fa-fire" style="font-size: 2rem; color: #ff4a4a;"></i>
+                                <div>H₂O boiling</div>
+                                <div><strong>100°C / 212°F</strong></div>
+                            </div>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div style="background: #2d2347; border-radius: 30px; padding: 1rem; text-align: center;">
+                                <i class="fas fa-weight-scale"></i> 1 kg = 2.205 lb
+                            </div>
+                            <div style="background: #2d2347; border-radius: 30px; padding: 1rem; text-align: center;">
+                                <i class="fas fa-ruler"></i> 1 in = 2.54 cm
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- footer -->
+        <div class="footer-note">
+            <i class="fas fa-flask"></i> VIRO SCI · precision lab tools · purple black halftone edition 
+            <span style="display: inline-block; background:#3a2b57; padding:0.2rem 0.8rem; border-radius: 40px; margin-left: 0.8rem;">v1.0</span>
+        </div>
+    </div>
+
+    <!-- interactive scripts -->
+    <script>
+        (function() {
+            // ----- THERMOMETER -----
+            let temp = 20; // celsius
+            const tempDisplay = document.getElementById('tempDisplay');
+            const thermometerFill = document.getElementById('thermometerFill');
+            const tempDesc = document.getElementById('tempDesc');
+            
+            function updateThermometer() {
+                tempDisplay.textContent = temp.toFixed(1);
+                // map -10 to 110 -> 0% to 100% width
+                let percent = ((temp + 10) / 120) * 100;
+                percent = Math.min(100, Math.max(0, percent));
+                thermometerFill.style.width = percent + '%';
+                
+                // color based on temp
+                if (temp < 10) {
+                    thermometerFill.style.background = 'linear-gradient(90deg, #4aa0ff, #8f4aff)';
+                    tempDesc.textContent = '❄️ Cold';
+                } else if (temp < 25) {
+                    thermometerFill.style.background = 'linear-gradient(90deg, #4aff9e, #4aa0ff)';
+                    tempDesc.textContent = '🌱 Mild';
+                } else if (temp < 40) {
+                    thermometerFill.style.background = 'linear-gradient(90deg, #ff9f4a, #ff4a6e)';
+                    tempDesc.textContent = '🔥 Warm';
+                } else {
+                    thermometerFill.style.background = 'linear-gradient(90deg, #ff4a4a, #b47aff)';
+                    tempDesc.textContent = '⚡ Hot';
+                }
+            }
+            
+            document.getElementById('tempUp').addEventListener('click', () => {
+                if (temp < 110) temp += 5;
+                updateThermometer();
+            });
+            
+            document.getElementById('tempDown').addEventListener('click', () => {
+                if (temp > -10) temp -= 5;
+                updateThermometer();
+            });
+            
+            // ----- pH SCALE -----
+            let ph = 7.0;
+            const phValue = document.getElementById('phValue');
+            const phIndicator = document.getElementById('phIndicator');
+            const phDesc = document.getElementById('phDesc');
+            const phSlider = document.getElementById('phSlider');
+            
+            function updatePH() {
+                phValue.textContent = ph.toFixed(1);
+                // position indicator: left from 0% to 100% based on ph/14
+                let leftPos = (ph / 14) * 100;
+                phIndicator.style.left = leftPos + '%';
+                phSlider.value = ph;
+                
+                // description
+                if (ph < 3) phDesc.textContent = '💀 Strong acid (battery acid)';
+                else if (ph < 5) phDesc.textContent = '🍋 Acidic (lemon juice)';
+                else if (ph < 6.5) phDesc.textContent = '🍊 Weak acid (orange)';
+                else if (ph < 7.5) phDesc.textContent = '💧 Neutral (pure water)';
+                else if (ph < 9) phDesc.textContent = '🧼 Weak base (baking soda)';
+                else if (ph < 11) phDesc.textContent = '🧪 Alkaline (ammonia)';
+                else phDesc.textContent = '⚗️ Strong base (drain cleaner)';
+            }
+            
+            document.getElementById('phUp').addEventListener('click', () => {
+                if (ph < 14) ph = Math.min(14, ph + 0.5);
+                updatePH();
+            });
+            
+            document.getElementById('phDown').addEventListener('click', () => {
+                if (ph > 0) ph = Math.max(0, ph - 0.5);
+                updatePH();
+            });
+            
+            phSlider.addEventListener('input', (e) => {
+                ph = parseFloat(e.target.value);
+                updatePH();
+            });
+            
+            // ----- UNIT CONVERTER -----
+            // temperature
+            const celsius = document.getElementById('celsius');
+            const fahrenheit = document.getElementById('fahrenheit');
+            const kelvin = document.getElementById('kelvin');
+            
+            function updateFromCelsius() {
+                let c = parseFloat(celsius.value) || 0;
+                fahrenheit.value = ((c * 9/5) + 32).toFixed(2);
+                kelvin.value = (c + 273.15).toFixed(2);
+            }
+            
+            function updateFromFahrenheit() {
+                let f = parseFloat(fahrenheit.value) || 32;
+                celsius.value = ((f - 32) * 5/9).toFixed(2);
+                kelvin.value = (((f - 32) * 5/9) + 273.15).toFixed(2);
+            }
+            
+            function updateFromKelvin() {
+                let k = parseFloat(kelvin.value) || 273.15;
+                celsius.value = (k - 273.15).toFixed(2);
+                fahrenheit.value = ((k - 273.15) * 9/5 + 32).toFixed(2);
+            }
+            
+            celsius.addEventListener('input', updateFromCelsius);
+            fahrenheit.addEventListener('input', updateFromFahrenheit);
+            kelvin.addEventListener('input', updateFromKelvin);
+            
+            // mass
+            const grams = document.getElementById('grams');
+            const kilograms = document.getElementById('kilograms');
+            const pounds = document.getElementById('pounds');
+            
+            function updateFromGrams() {
+                let g = parseFloat(grams.value) || 0;
+                kilograms.value = (g / 1000).toFixed(3);
+                pounds.value = (g * 0.00220462).toFixed(3);
+            }
+            
+            function updateFromKilograms() {
+                let kg = parseFloat(kilograms.value) || 0;
+                grams.value = (kg * 1000).toFixed(1);
+                pounds.value = (kg * 2.20462).toFixed(2);
+            }
+            
+            function updateFromPounds() {
+                let lb = parseFloat(pounds.value) || 0;
+                grams.value = (lb * 453.592).toFixed(1);
+                kilograms.value = (lb * 0.453592).toFixed(3);
+            }
+            
+            grams.addEventListener('input', updateFromGrams);
+            kilograms.addEventListener('input', updateFromKilograms);
+            pounds.addEventListener('input', updateFromPounds);
+            
+            // volume
+            const milliliters = document.getElementById('milliliters');
+            const liters = document.getElementById('liters');
+            const gallons = document.getElementById('gallons');
+            
+            function updateFromMilliliters() {
+                let ml = parseFloat(milliliters.value) || 0;
+                liters.value = (ml / 1000).toFixed(3);
+                gallons.value = (ml * 0.000264172).toFixed(4);
+            }
+            
+            function updateFromLiters() {
+                let l = parseFloat(liters.value) || 0;
+                milliliters.value = (l * 1000).toFixed(1);
+                gallons.value = (l * 0.264172).toFixed(3);
+            }
+            
+            function updateFromGallons() {
+                let gal = parseFloat(gallons.value) || 0;
+                milliliters.value = (gal * 3785.41).toFixed(1);
+                liters.value = (gal * 3.78541).toFixed(2);
+            }
+            
+            milliliters.addEventListener('input', updateFromMilliliters);
+            liters.addEventListener('input', updateFromLiters);
+            gallons.addEventListener('input', updateFromGallons);
+            
+            // length
+            const millimeters = document.getElementById('millimeters');
+            const centimeters = document.getElementById('centimeters');
+            const inches = document.getElementById('inches');
+            
+            function updateFromMillimeters() {
+                let mm = parseFloat(millimeters.value) || 0;
+                centimeters.value = (mm / 10).toFixed(2);
+                inches.value = (mm / 25.4).toFixed(2);
+            }
+            
+            function updateFromCentimeters() {
+                let cm = parseFloat(centimeters.value) || 0;
+                millimeters.value = (cm * 10).toFixed(1);
+                inches.value = (cm / 2.54).toFixed(2);
+            }
+            
+            function updateFromInches() {
+                let inch = parseFloat(inches.value) || 0;
+                millimeters.value = (inch * 25.4).toFixed(1);
+                centimeters.value = (inch * 2.54).toFixed(2);
+            }
+            
+            millimeters.addEventListener('input', updateFromMillimeters);
+            centimeters.addEventListener('input', updateFromCentimeters);
+            inches.addEventListener('input', updateFromInches);
+            
+            // converter type switching
+            const convTemp = document.getElementById('convTemp');
+            const convMass = document.getElementById('convMass');
+            const convVolume = document.getElementById('convVolume');
+            const convLength = document.getElementById('convLength');
+            
+            const tempInputs = document.getElementById('tempInputs');
+            const massInputs = document.getElementById('massInputs');
+            const volumeInputs = document.getElementById('volumeInputs');
+            const lengthInputs = document.getElementById('lengthInputs');
+            
+            function deactivateAll() {
+                [convTemp, convMass, convVolume, convLength].forEach(btn => btn.classList.remove('active'));
+                tempInputs.style.display = 'none';
+                massInputs.style.display = 'none';
+                volumeInputs.style.display = 'none';
+                lengthInputs.style.display = 'none';
+            }
+            
+            convTemp.addEventListener('click', () => {
+                deactivateAll();
+                convTemp.classList.add('active');
+                tempInputs.style.display = 'block';
+            });
+            
+            convMass.addEventListener('click', () => {
+                deactivateAll();
+                convMass.classList.add('active');
+                massInputs.style.display = 'block';
+            });
+            
+            convVolume.addEventListener('click', () => {
+                deactivateAll();
+                convVolume.classList.add('active');
+                volumeInputs.style.display = 'block';
+            });
+            
+            convLength.addEventListener('click', () => {
+                deactivateAll();
+                convLength.classList.add('active');
+                lengthInputs.style.display = 'block';
+            });
+            
+            // initialize
+            updateThermometer();
+            updatePH();
+        })();
+    </script>
+</body>
+</html>
